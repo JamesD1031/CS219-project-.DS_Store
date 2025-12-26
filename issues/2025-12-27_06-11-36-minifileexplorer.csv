@@ -9,7 +9,7 @@
 - 支持 `help` 输出包含：cd/ls/touch/mkdir/rm/rmdir/stat/search/cp/mv/du/exit（即使部分功能后续实现，也先列出）
 - 支持解析形如 `cd ""/path with space""` 的单参数","- `printf ""help\nexit\n"" | ./build/MiniFileExplorer`
 - `printf ""cd \""/tmp\""\nexit\n"" | ./build/MiniFileExplorer`（若平台无 /tmp，改用存在目录）","- 解析器不产生越界/崩溃
-- help 内容与文档命令集合一致",- 之后实现各命令时不改变提示符/解析行为,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:55,
+- help 内容与文档命令集合一致",- 之后实现各命令时不改变提示符/解析行为,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:55,
 003,P0,A-基础,fs,Startup dir + cd (~ supported),实现启动目录逻辑（getcwd/命令行初始目录）；实现 cd 的存在性/目录性校验与 cd ~。,"- 无参数启动：显示当前工作目录
 - 有参数启动：目录不存在输出 `Directory not found: <dir>` 并退出；存在则进入该目录
 - `cd <path>`：不存在输出 `Invalid directory: <path>`；是文件输出 `Not a directory: <path>`
