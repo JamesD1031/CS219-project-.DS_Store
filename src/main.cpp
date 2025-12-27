@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cstdlib>
+#include <cctype>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -33,6 +35,13 @@ static std::string GetHomeDir() {
     return std::string(pw->pw_dir);
   }
   return {};
+}
+
+static std::string ToLowerAscii(std::string value) {
+  for (char& ch : value) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  return value;
 }
 
 static std::time_t FileTimeToTimeT(std::filesystem::file_time_type file_time) {
@@ -361,6 +370,68 @@ static void HandleStatCommand(const std::vector<std::string>& tokens) {
   std::cout << "Access Time: " << FormatLocalTime(st.st_atime) << "\n";
 }
 
+static void HandleSearchCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing keyword: Please enter 'search [keyword]'\n";
+    return;
+  }
+
+  const std::string keyword = tokens[1];
+  const std::string keyword_lower = ToLowerAscii(keyword);
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  const fs::path base = fs::current_path(ec);
+  if (ec) {
+    std::cout << "Failed to access current directory\n";
+    return;
+  }
+
+  struct SearchResult {
+    std::string path;
+    std::string type;
+  };
+  std::vector<SearchResult> results;
+
+  for (fs::recursive_directory_iterator it(
+           base, fs::directory_options::skip_permission_denied, ec);
+       !ec && it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    const fs::directory_entry& entry = *it;
+    const fs::path path = entry.path();
+    const std::string filename = path.filename().string();
+    if (ToLowerAscii(filename).find(keyword_lower) == std::string::npos) {
+      continue;
+    }
+
+    std::error_code entry_ec;
+    const bool is_dir = entry.is_directory(entry_ec);
+    const bool is_file = entry.is_regular_file(entry_ec);
+
+    std::error_code abs_ec;
+    std::string abs_path = fs::absolute(path, abs_ec).string();
+    if (abs_ec) {
+      abs_path = path.string();
+    }
+    if (is_dir) {
+      abs_path += "/";
+    }
+
+    const std::string type = is_dir ? "Dir" : (is_file ? "File" : "File");
+    results.push_back(SearchResult{std::move(abs_path), type});
+  }
+
+  if (results.empty()) {
+    std::cout << "No results found for '" << keyword << "'\n";
+    return;
+  }
+
+  std::cout << "Search results for '" << keyword << "' (" << results.size()
+            << " items):\n";
+  for (const auto& r : results) {
+    std::cout << r.path << " (" << r.type << ")\n";
+  }
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -459,6 +530,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "stat") {
       HandleStatCommand(tokens);
+      continue;
+    }
+    if (cmd == "search") {
+      HandleSearchCommand(tokens);
       continue;
     }
 

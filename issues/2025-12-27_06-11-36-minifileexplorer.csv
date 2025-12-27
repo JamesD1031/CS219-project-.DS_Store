@@ -40,7 +40,7 @@
 008,P1,B-进阶,fs,search recursive (case-insensitive),实现 `search [keyword]`：递归搜索当前目录与子目录，名称包含关键词（不区分大小写），按“路径、类型”展示。,"- 有结果时输出：`Search results for '<kw>' (<n> items):`
 - 每条结果：`<abs_path> (File)` 或 `<abs_path>/ (Dir)`
 - 无结果输出：`No results found for '<kw>'`","- `tmp=$(mktemp -d) && mkdir -p $tmp/sub && touch $tmp/Note.txt $tmp/sub/old_note && mkdir $tmp/sub/old_note_dir && printf ""search note\nsearch xyz\nexit\n"" | ./build/MiniFileExplorer $tmp`","- 遍历使用 skip_permission_denied 且不跟随 symlink
-- 输出计数与列表一致",- 与 du/ls -s 的递归逻辑复用不引入循环,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:74,
+- 输出计数与列表一致",- 与 du/ls -s 的递归逻辑复用不引入循环,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:74,
 009,P1,B-进阶,fs,cp file with overwrite prompt,实现 `cp [src] [dst]` 文件复制；若目标路径存在同名文件则提示覆盖确认；并处理 Source not found / Invalid target path。,"- 源不存在输出 `Source not found`
 - 目标非法输出 `Invalid target path`
 - 目标存在同名文件时提示 `File exists in target: Overwrite? (y/n)`；仅 `y` 覆盖
