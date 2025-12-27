@@ -322,6 +322,45 @@ static void HandleRmdirCommand(const std::vector<std::string>& tokens) {
   }
 }
 
+static std::time_t GetCreateTime(const struct stat& st) {
+#if defined(__APPLE__)
+  return st.st_birthtimespec.tv_sec;
+#else
+  return st.st_ctime;
+#endif
+}
+
+static void HandleStatCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing target: Please enter'stat [name]'\n";
+    return;
+  }
+  const std::string& name = tokens[1];
+
+  struct stat st;
+  if (::stat(name.c_str(), &st) != 0) {
+    std::cout << "Target not found: " << name << "\n";
+    return;
+  }
+
+  const bool is_dir = S_ISDIR(st.st_mode);
+  const std::string type = is_dir ? "Dir" : "File";
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  std::string abs_path = fs::absolute(fs::path(name), ec).string();
+  if (ec) {
+    abs_path = name;
+  }
+
+  std::cout << "Type: " << type << "\n";
+  std::cout << "Path: " << abs_path << "\n";
+  std::cout << "Size: " << (is_dir ? "-" : std::to_string(st.st_size)) << "\n";
+  std::cout << "Create Time: " << FormatLocalTime(GetCreateTime(st)) << "\n";
+  std::cout << "Modify Time: " << FormatLocalTime(st.st_mtime) << "\n";
+  std::cout << "Access Time: " << FormatLocalTime(st.st_atime) << "\n";
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -416,6 +455,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "rmdir") {
       HandleRmdirCommand(tokens);
+      continue;
+    }
+    if (cmd == "stat") {
+      HandleStatCommand(tokens);
       continue;
     }
 
