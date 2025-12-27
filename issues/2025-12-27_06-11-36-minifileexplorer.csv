@@ -28,7 +28,7 @@
 - `mkdir data` 创建目录
 - 已存在时输出 `Directory already exists: data`","- `tmp=$(mktemp -d) && printf ""touch a.txt\ntouch a.txt\nmkdir data\nmkdir data\nexit\n"" | ./build/MiniFileExplorer $tmp`
 - 检查 $tmp/a.txt 与 $tmp/data 存在","- 不覆盖已有文件内容
-- 创建失败有明确错误提示（不强制文案）",- 不影响 ls/stat/search 等行为,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:31,
+- 创建失败有明确错误提示（不强制文案）",- 不影响 ls/stat/search 等行为,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:31,
 006,P0,A-基础,fs,rm + rmdir (safe deletion),实现 `rm`（二次确认，仅 y 执行）与 `rmdir`（仅删除空目录），并输出 PDF 指定错误提示。,"- `rm a.txt` 提示 `Are you sure to delete a.txt? (y/n)`；输入 `n` 不删除；输入 `y` 删除
 - `rmdir dir`：非空输出 `Directory not empty: dir`；不存在输出 `Directory not found: dir`","- `tmp=$(mktemp -d) && (cd $tmp && touch a.txt && mkdir d && touch d/x) && printf ""rm a.txt\nn\nrm a.txt\ny\nrmdir d\nrmdir no_such\nexit\n"" | ./build/MiniFileExplorer $tmp`
 - 验证 a.txt 最终被删除；d 未被删除；no_such 提示正确","- 不实现任何递归删除

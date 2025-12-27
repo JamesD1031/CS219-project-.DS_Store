@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <optional>
@@ -219,6 +220,47 @@ static void HandleLsCommand(const std::vector<std::string>& tokens) {
   }
 }
 
+static void HandleTouchCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing filename: Please enter 'touch [name]'\n";
+    return;
+  }
+  const std::string& name = tokens[1];
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  if (fs::exists(fs::path(name), ec) && !ec) {
+    std::cout << "File already exists: " << name << "\n";
+    return;
+  }
+
+  std::ofstream out(name, std::ios::out | std::ios::binary);
+  if (!out) {
+    std::cout << "Failed to create file: " << name << "\n";
+    return;
+  }
+}
+
+static void HandleMkdirCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing directory name: Please enter 'mkdir [name]'\n";
+    return;
+  }
+  const std::string& name = tokens[1];
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  if (fs::exists(fs::path(name), ec) && !ec) {
+    std::cout << "Directory already exists: " << name << "\n";
+    return;
+  }
+
+  if (!fs::create_directory(fs::path(name), ec) || ec) {
+    std::cout << "Failed to create directory: " << name << "\n";
+    return;
+  }
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -297,6 +339,14 @@ int main(int argc, char** argv) {
     }
     if (cmd == "ls") {
       HandleLsCommand(tokens);
+      continue;
+    }
+    if (cmd == "touch") {
+      HandleTouchCommand(tokens);
+      continue;
+    }
+    if (cmd == "mkdir") {
+      HandleMkdirCommand(tokens);
       continue;
     }
 
