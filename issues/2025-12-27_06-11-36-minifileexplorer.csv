@@ -46,7 +46,7 @@
 - 目标存在同名文件时提示 `File exists in target: Overwrite? (y/n)`；仅 `y` 覆盖
 - 成功复制后内容一致","- `tmp=$(mktemp -d) && mkdir -p $tmp/a $tmp/b && echo 123 > $tmp/a/note.txt && echo old > $tmp/b/note.txt && printf ""cp a/note.txt b/\nn\ncp a/note.txt b/\ny\nexit\n"" | ./build/MiniFileExplorer $tmp`
 - 检查 $tmp/b/note.txt 最终内容为 123","- 仅支持文件复制（目录作为 src 应拒绝）
-- 覆盖必须二次确认",- 不影响 rm/rmdir 的确认逻辑,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:83,
+- 覆盖必须二次确认",- 不影响 rm/rmdir 的确认逻辑,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:83,
 010,P1,B-进阶,fs,mv file/dir (move + rename),实现 `mv [src] [dst]`：支持移动文件/文件夹与重命名；处理 Source not found / Invalid target path。,"- 源不存在输出 `Source not found`
 - 目标非法输出 `Invalid target path`
 - `mv note.txt new_note.txt` 实现重命名

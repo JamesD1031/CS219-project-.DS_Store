@@ -432,6 +432,58 @@ static void HandleSearchCommand(const std::vector<std::string>& tokens) {
   }
 }
 
+static void HandleCpCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 3) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+
+  namespace fs = std::filesystem;
+  const fs::path src = fs::path(tokens[1]);
+  const fs::path dst_arg = fs::path(tokens[2]);
+
+  std::error_code ec;
+  if (!fs::exists(src, ec) || ec || !fs::is_regular_file(src, ec) || ec) {
+    std::cout << "Source not found\n";
+    return;
+  }
+
+  fs::path dst_file = dst_arg;
+  if (fs::exists(dst_arg, ec) && !ec && fs::is_directory(dst_arg, ec) && !ec) {
+    dst_file = dst_arg / src.filename();
+  }
+
+  fs::path parent = dst_file.parent_path();
+  if (parent.empty()) {
+    parent = fs::path(".");
+  }
+  if (!fs::exists(parent, ec) || ec || !fs::is_directory(parent, ec) || ec) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+  if (fs::exists(dst_file, ec) && !ec && fs::is_directory(dst_file, ec) && !ec) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+
+  fs::copy_options options = fs::copy_options::none;
+  if (fs::exists(dst_file, ec) && !ec) {
+    std::cout << "File exists in target: Overwrite? (y/n)" << std::flush;
+    std::string confirm;
+    if (!std::getline(std::cin, confirm)) {
+      return;
+    }
+    if (confirm != "y") {
+      return;
+    }
+    options = fs::copy_options::overwrite_existing;
+  }
+
+  if (!fs::copy_file(src, dst_file, options, ec) || ec) {
+    std::cout << "Invalid target path\n";
+  }
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -534,6 +586,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "search") {
       HandleSearchCommand(tokens);
+      continue;
+    }
+    if (cmd == "cp") {
+      HandleCpCommand(tokens);
       continue;
     }
 
