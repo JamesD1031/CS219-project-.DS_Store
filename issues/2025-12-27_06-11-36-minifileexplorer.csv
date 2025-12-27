@@ -68,4 +68,4 @@
 014,P2,A/B-验收,tests,Add smoke test script,添加轻量端到端验收脚本（在临时目录创建数据并运行 MiniFileExplorer，验证关键输出/行为），用于本地快速回归。,"- `scripts/smoke_test.sh`（或等价）可运行且不访问仓库外敏感路径
 - 脚本覆盖：touch/mkdir/ls/stat/search/cp/mv/du/rm/rmdir/exit 的最小路径","- `bash scripts/smoke_test.sh`
 - 若时间字段不稳定，脚本仅断言关键字/文件存在性并在 notes 记录限制","- 脚本不包含破坏性路径（不删除非临时目录）
-- 失败时给出清晰日志",- 作为回归保护，后续修改需保持脚本通过,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:127,
+- 失败时给出清晰日志",- 作为回归保护，后续修改需保持脚本通过,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:127,
