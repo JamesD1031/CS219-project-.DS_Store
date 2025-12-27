@@ -17,7 +17,7 @@
 '`
 - `./build/MiniFileExplorer /no/such/dir`（应直接退出并打印提示）
 - 交互：`printf ""cd ~\nexit\n"" | ./build/MiniFileExplorer`","- 错误提示文案与 PDF 一致
-- cd 对相对/绝对路径均可工作",- 与命令解析/提示符兼容,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:12,
+- cd 对相对/绝对路径均可工作",- 与命令解析/提示符兼容,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:12,
 004,P0,A-基础,fs,ls listing (aligned columns),实现 `ls`：列出当前目录下文件/目录；目录名后加 /；输出 4 列（Name/Type/Size(B)/Modify Time）并对齐。,"- `ls` 输出首行表头：`Name Type Size(B) Modify Time`
 - 每个目录项：目录名以 `/` 结尾、Type=Dir、Size(B) 为 `-`；文件 Type=File、Size(B) 为字节数
 - Modify Time 格式 `YYYY-MM-DD HH:MM:SS`，列对齐可读","- 在临时目录创建文件与目录后：`printf ""ls\nexit\n"" | ./build/MiniFileExplorer <tmpdir>`

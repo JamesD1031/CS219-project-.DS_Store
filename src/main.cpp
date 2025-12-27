@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <pwd.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static std::string GetCwd() {
@@ -14,6 +16,18 @@ static std::string GetCwd() {
   std::string result(cwd);
   std::free(cwd);
   return result;
+}
+
+static std::string GetHomeDir() {
+  const char* home = std::getenv("HOME");
+  if (home != nullptr && home[0] != '\0') {
+    return std::string(home);
+  }
+  passwd* pw = ::getpwuid(::getuid());
+  if (pw != nullptr && pw->pw_dir != nullptr && pw->pw_dir[0] != '\0') {
+    return std::string(pw->pw_dir);
+  }
+  return {};
 }
 
 static void PrintHelp() {
@@ -105,7 +119,44 @@ static std::optional<std::vector<std::string>> TokenizeCommandLine(
   return tokens;
 }
 
-int main(int /*argc*/, char** /*argv*/) {
+static void HandleCdCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing path: Please enter 'cd [path]'\n";
+    return;
+  }
+
+  const std::string& arg = tokens[1];
+  std::string target = arg;
+  if (arg == "~") {
+    target = GetHomeDir();
+  }
+
+  struct stat st;
+  if (target.empty() || ::stat(target.c_str(), &st) != 0) {
+    std::cout << "Invalid directory: " << arg << "\n";
+    return;
+  }
+  if (!S_ISDIR(st.st_mode)) {
+    std::cout << "Not a directory: " << arg << "\n";
+    return;
+  }
+  if (::chdir(target.c_str()) != 0) {
+    std::cout << "Invalid directory: " << arg << "\n";
+    return;
+  }
+}
+
+int main(int argc, char** argv) {
+  if (argc >= 2) {
+    const std::string initial_dir = argv[1];
+    struct stat st;
+    if (::stat(initial_dir.c_str(), &st) != 0 || !S_ISDIR(st.st_mode) ||
+        ::chdir(initial_dir.c_str()) != 0) {
+      std::cout << "Directory not found: " << initial_dir << "\n";
+      return 1;
+    }
+  }
+
   const std::string cwd = GetCwd();
   if (cwd.empty()) {
     std::cerr << "Failed to get current working directory\n";
@@ -116,13 +167,8 @@ int main(int /*argc*/, char** /*argv*/) {
 
   std::string line;
   while (true) {
-    std::cout << "Enter command (type 'help' for all commands): ";
+    std::cout << "Enter command (type 'help' for all commands): " << std::flush;
     if (!std::getline(std::cin, line)) {
-      break;
-    }
-
-    if (line == "exit") {
-      std::cout << "MiniFileExplorer closed successfully\n";
       break;
     }
 
@@ -137,8 +183,16 @@ int main(int /*argc*/, char** /*argv*/) {
     }
 
     const std::string& cmd = tokens[0];
+    if (cmd == "exit") {
+      std::cout << "MiniFileExplorer closed successfully\n";
+      break;
+    }
     if (cmd == "help") {
       PrintHelp();
+      continue;
+    }
+    if (cmd == "cd") {
+      HandleCdCommand(tokens);
       continue;
     }
 
