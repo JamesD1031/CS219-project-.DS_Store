@@ -3,3 +3,14 @@ cmake-build-*/
 .DS_Store
 .venv/
 
+# macOS
+.DS_Store
+
+# local agents / tools
+.agent/
+.venv/
+build/
+
+# docs/materials not required for submission
+It's MyFS.pdf
+project4/
