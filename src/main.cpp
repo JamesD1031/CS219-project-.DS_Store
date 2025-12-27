@@ -159,10 +159,32 @@ struct LsItem {
   std::string type;
   std::string size;
   std::string modify_time;
+  std::uintmax_t size_bytes = 0;
+  std::time_t modify_time_t = 0;
+  bool is_dir = false;
+  bool is_empty_dir = false;
 };
 
+static std::uintmax_t CalculateDirectorySizeBytes(
+    const std::filesystem::path& dir_path);
+
 static void HandleLsCommand(const std::vector<std::string>& tokens) {
-  if (tokens.size() != 1) {
+  enum class Mode {
+    kNormal,
+    kSortSize,
+    kSortTime,
+  };
+  Mode mode = Mode::kNormal;
+  if (tokens.size() == 2) {
+    if (tokens[1] == "-s") {
+      mode = Mode::kSortSize;
+    } else if (tokens[1] == "-t") {
+      mode = Mode::kSortTime;
+    } else {
+      std::cout << "Invalid option: ls\n";
+      return;
+    }
+  } else if (tokens.size() != 1) {
     std::cout << "Invalid option: ls\n";
     return;
   }
@@ -187,24 +209,53 @@ static void HandleLsCommand(const std::vector<std::string>& tokens) {
     const bool is_file = entry.is_regular_file(entry_ec);
 
     LsItem item;
+    item.is_dir = is_dir;
     item.name = filename + (is_dir ? "/" : "");
     item.type = is_dir ? "Dir" : "File";
 
-    if (is_dir) {
-      item.size = "-";
+    if (mode == Mode::kSortSize && is_dir) {
+      std::error_code empty_ec;
+      item.is_empty_dir = fs::is_empty(path, empty_ec) && !empty_ec;
+      item.size_bytes = CalculateDirectorySizeBytes(path);
+      item.size = std::to_string(item.size_bytes);
     } else if (is_file) {
       std::error_code size_ec;
       const auto size_value = fs::file_size(path, size_ec);
+      item.size_bytes = size_ec ? 0 : size_value;
       item.size = size_ec ? "-" : std::to_string(size_value);
+    } else if (is_dir) {
+      item.size = "-";
+      item.size_bytes = 0;
     } else {
       item.size = "-";
+      item.size_bytes = 0;
     }
 
     std::error_code time_ec;
     const auto ftime = fs::last_write_time(path, time_ec);
-    item.modify_time = time_ec ? "-" : FormatLocalTime(FileTimeToTimeT(ftime));
+    item.modify_time_t = time_ec ? 0 : FileTimeToTimeT(ftime);
+    item.modify_time = time_ec ? "-" : FormatLocalTime(item.modify_time_t);
 
     items.push_back(std::move(item));
+  }
+
+  if (mode == Mode::kSortTime) {
+    std::sort(items.begin(), items.end(), [](const LsItem& a, const LsItem& b) {
+      if (a.modify_time_t != b.modify_time_t) {
+        return a.modify_time_t > b.modify_time_t;
+      }
+      return a.name < b.name;
+    });
+  } else if (mode == Mode::kSortSize) {
+    std::sort(items.begin(), items.end(), [](const LsItem& a, const LsItem& b) {
+      if (a.is_empty_dir != b.is_empty_dir) {
+        return !a.is_empty_dir;
+      }
+      if (a.size_bytes != b.size_bytes) {
+        return a.size_bytes > b.size_bytes;
+      }
+      return a.name < b.name;
+    });
   }
 
   size_t name_w = std::string("Name").size();
