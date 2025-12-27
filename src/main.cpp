@@ -540,6 +540,58 @@ static void HandleMvCommand(const std::vector<std::string>& tokens) {
   std::cout << "Invalid target path\n";
 }
 
+static std::uintmax_t CalculateDirectorySizeBytes(
+    const std::filesystem::path& dir_path) {
+  namespace fs = std::filesystem;
+  std::uintmax_t total = 0;
+
+  std::error_code ec;
+  for (fs::recursive_directory_iterator it(
+           dir_path, fs::directory_options::skip_permission_denied, ec);
+       !ec && it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    const fs::directory_entry& entry = *it;
+    std::error_code entry_ec;
+    if (!entry.is_regular_file(entry_ec) || entry_ec) {
+      continue;
+    }
+    std::error_code size_ec;
+    const auto size_value = fs::file_size(entry.path(), size_ec);
+    if (!size_ec) {
+      total += size_value;
+    }
+  }
+
+  return total;
+}
+
+static void HandleDuCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing directory name: Please enter 'du [name]'\n";
+    return;
+  }
+
+  const std::string& arg = tokens[1];
+  namespace fs = std::filesystem;
+  const fs::path dir_path(arg);
+
+  std::error_code ec;
+  if (!fs::exists(dir_path, ec) || ec || !fs::is_directory(dir_path, ec) || ec) {
+    std::cout << "Invalid directory: " << arg << "\n";
+    return;
+  }
+
+  const std::uintmax_t bytes = CalculateDirectorySizeBytes(dir_path);
+  const std::uintmax_t kb = 1024;
+  const std::uintmax_t mb = 1024 * 1024;
+  if (bytes >= mb) {
+    const std::uintmax_t value = (bytes + (mb / 2)) / mb;
+    std::cout << "Total size of " << arg << ": " << value << " MB\n";
+    return;
+  }
+  const std::uintmax_t value = (bytes + (kb / 2)) / kb;
+  std::cout << "Total size of " << arg << ": " << value << " KB\n";
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -650,6 +702,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "mv") {
       HandleMvCommand(tokens);
+      continue;
+    }
+    if (cmd == "du") {
+      HandleDuCommand(tokens);
       continue;
     }
 
