@@ -1,6 +1,10 @@
 #include <cstdlib>
+#include <ctime>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -28,6 +32,27 @@ static std::string GetHomeDir() {
     return std::string(pw->pw_dir);
   }
   return {};
+}
+
+static std::time_t FileTimeToTimeT(std::filesystem::file_time_type file_time) {
+  using namespace std::chrono;
+  const auto system_time =
+      time_point_cast<system_clock::duration>(file_time -
+                                             std::filesystem::file_time_type::clock::now() +
+                                             system_clock::now());
+  return system_clock::to_time_t(system_time);
+}
+
+static std::string FormatLocalTime(std::time_t time_value) {
+  std::tm tm{};
+  if (::localtime_r(&time_value, &tm) == nullptr) {
+    return "-";
+  }
+  char buf[20];
+  if (std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm) == 0) {
+    return "-";
+  }
+  return std::string(buf);
 }
 
 static void PrintHelp() {
@@ -119,6 +144,81 @@ static std::optional<std::vector<std::string>> TokenizeCommandLine(
   return tokens;
 }
 
+struct LsItem {
+  std::string name;
+  std::string type;
+  std::string size;
+  std::string modify_time;
+};
+
+static void HandleLsCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() != 1) {
+    std::cout << "Invalid option: ls\n";
+    return;
+  }
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  const fs::path dir = fs::current_path(ec);
+  if (ec) {
+    std::cout << "Failed to access current directory\n";
+    return;
+  }
+
+  std::vector<LsItem> items;
+  for (fs::directory_iterator it(dir, fs::directory_options::skip_permission_denied, ec);
+       !ec && it != fs::directory_iterator(); it.increment(ec)) {
+    const fs::directory_entry& entry = *it;
+    const fs::path path = entry.path();
+    const std::string filename = path.filename().string();
+
+    std::error_code entry_ec;
+    const bool is_dir = entry.is_directory(entry_ec);
+    const bool is_file = entry.is_regular_file(entry_ec);
+
+    LsItem item;
+    item.name = filename + (is_dir ? "/" : "");
+    item.type = is_dir ? "Dir" : "File";
+
+    if (is_dir) {
+      item.size = "-";
+    } else if (is_file) {
+      std::error_code size_ec;
+      const auto size_value = fs::file_size(path, size_ec);
+      item.size = size_ec ? "-" : std::to_string(size_value);
+    } else {
+      item.size = "-";
+    }
+
+    std::error_code time_ec;
+    const auto ftime = fs::last_write_time(path, time_ec);
+    item.modify_time = time_ec ? "-" : FormatLocalTime(FileTimeToTimeT(ftime));
+
+    items.push_back(std::move(item));
+  }
+
+  size_t name_w = std::string("Name").size();
+  size_t type_w = std::string("Type").size();
+  size_t size_w = std::string("Size(B)").size();
+  for (const auto& item : items) {
+    name_w = std::max(name_w, item.name.size());
+    type_w = std::max(type_w, item.type.size());
+    size_w = std::max(size_w, item.size.size());
+  }
+
+  std::cout << std::left << std::setw(static_cast<int>(name_w)) << "Name"
+            << " " << std::left << std::setw(static_cast<int>(type_w)) << "Type"
+            << " " << std::right << std::setw(static_cast<int>(size_w)) << "Size(B)"
+            << " " << "Modify Time" << "\n";
+
+  for (const auto& item : items) {
+    std::cout << std::left << std::setw(static_cast<int>(name_w)) << item.name
+              << " " << std::left << std::setw(static_cast<int>(type_w)) << item.type
+              << " " << std::right << std::setw(static_cast<int>(size_w)) << item.size
+              << " " << item.modify_time << "\n";
+  }
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -193,6 +293,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "cd") {
       HandleCdCommand(tokens);
+      continue;
+    }
+    if (cmd == "ls") {
+      HandleLsCommand(tokens);
       continue;
     }
 

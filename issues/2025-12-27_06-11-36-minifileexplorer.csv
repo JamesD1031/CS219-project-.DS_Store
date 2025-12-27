@@ -22,7 +22,7 @@
 - 每个目录项：目录名以 `/` 结尾、Type=Dir、Size(B) 为 `-`；文件 Type=File、Size(B) 为字节数
 - Modify Time 格式 `YYYY-MM-DD HH:MM:SS`，列对齐可读","- 在临时目录创建文件与目录后：`printf ""ls\nexit\n"" | ./build/MiniFileExplorer <tmpdir>`
 - 人工检查列对齐与目录 `/` 后缀","- 不因权限/异常目录项崩溃
-- 时间格式稳定（19 字符）",- 之后加入 ls -s/-t 不破坏默认 ls 格式,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:46,
+- 时间格式稳定（19 字符）",- 之后加入 ls -s/-t 不破坏默认 ls 格式,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:46,
 005,P0,A-基础,fs,touch + mkdir,实现 `touch` 与 `mkdir` 创建文件/目录，处理已存在提示。,"- `touch a.txt` 创建 0 字节文件
 - 已存在时输出 `File already exists: a.txt`
 - `mkdir data` 创建目录
