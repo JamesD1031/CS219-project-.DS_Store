@@ -261,6 +261,67 @@ static void HandleMkdirCommand(const std::vector<std::string>& tokens) {
   }
 }
 
+static void HandleRmCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing filename: Please enter 'rm [name]'\n";
+    return;
+  }
+  const std::string& name = tokens[1];
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  const fs::path path(name);
+  if (!fs::exists(path, ec) || ec) {
+    std::cout << "File not found: " << name << "\n";
+    return;
+  }
+  if (!fs::is_regular_file(path, ec) || ec) {
+    std::cout << "Not a file: " << name << "\n";
+    return;
+  }
+
+  std::cout << "Are you sure to delete " << name << "? (y/n)" << std::flush;
+  std::string confirm;
+  if (!std::getline(std::cin, confirm)) {
+    return;
+  }
+
+  if (confirm != "y") {
+    return;
+  }
+
+  if (!fs::remove(path, ec) || ec) {
+    std::cout << "Failed to delete file: " << name << "\n";
+  }
+}
+
+static void HandleRmdirCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 2) {
+    std::cout << "Missing directory name: Please enter 'rmdir [name]'\n";
+    return;
+  }
+  const std::string& name = tokens[1];
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  const fs::path path(name);
+  if (!fs::exists(path, ec) || ec) {
+    std::cout << "Directory not found: " << name << "\n";
+    return;
+  }
+  if (!fs::is_directory(path, ec) || ec) {
+    std::cout << "Not a directory: " << name << "\n";
+    return;
+  }
+  if (!fs::is_empty(path, ec) || ec) {
+    std::cout << "Directory not empty: " << name << "\n";
+    return;
+  }
+  if (!fs::remove(path, ec) || ec) {
+    std::cout << "Failed to delete directory: " << name << "\n";
+  }
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -347,6 +408,14 @@ int main(int argc, char** argv) {
     }
     if (cmd == "mkdir") {
       HandleMkdirCommand(tokens);
+      continue;
+    }
+    if (cmd == "rm") {
+      HandleRmCommand(tokens);
+      continue;
+    }
+    if (cmd == "rmdir") {
+      HandleRmdirCommand(tokens);
       continue;
     }
 

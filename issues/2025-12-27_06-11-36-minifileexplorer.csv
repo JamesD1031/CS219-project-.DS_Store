@@ -32,7 +32,7 @@
 006,P0,A-基础,fs,rm + rmdir (safe deletion),实现 `rm`（二次确认，仅 y 执行）与 `rmdir`（仅删除空目录），并输出 PDF 指定错误提示。,"- `rm a.txt` 提示 `Are you sure to delete a.txt? (y/n)`；输入 `n` 不删除；输入 `y` 删除
 - `rmdir dir`：非空输出 `Directory not empty: dir`；不存在输出 `Directory not found: dir`","- `tmp=$(mktemp -d) && (cd $tmp && touch a.txt && mkdir d && touch d/x) && printf ""rm a.txt\nn\nrm a.txt\ny\nrmdir d\nrmdir no_such\nexit\n"" | ./build/MiniFileExplorer $tmp`
 - 验证 a.txt 最终被删除；d 未被删除；no_such 提示正确","- 不实现任何递归删除
-- 删除对象必须限制为文件（rm）/空目录（rmdir）",- 不影响 cp/mv/du 相关功能,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:39,
+- 删除对象必须限制为文件（rm）/空目录（rmdir）",- 不影响 cp/mv/du 相关功能,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:39,
 007,P0,A-基础,fs,stat details,实现 `stat [name]`：输出类型、路径、大小（目录为 -）、创建/修改/访问时间；处理缺参/不存在提示。,"- `stat` 无参数输出 `Missing target: Please enter'stat [name]'`
 - 不存在输出 `Target not found: <name>`
 - 存在时输出：Type/Path/Size/Create Time/Modify Time/Access Time（字段名可自定义，但信息必须齐）","- `tmp=$(mktemp -d) && (cd $tmp && echo hi > a.txt && mkdir d) && printf ""stat\nstat no_such\nstat a.txt\nstat d\nexit\n"" | ./build/MiniFileExplorer $tmp`","- 时间格式与 ls 一致
