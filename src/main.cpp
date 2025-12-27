@@ -484,6 +484,62 @@ static void HandleCpCommand(const std::vector<std::string>& tokens) {
   }
 }
 
+static void HandleMvCommand(const std::vector<std::string>& tokens) {
+  if (tokens.size() < 3) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+
+  namespace fs = std::filesystem;
+  const fs::path src = fs::path(tokens[1]);
+  const fs::path dst_arg = fs::path(tokens[2]);
+
+  std::error_code ec;
+  if (!fs::exists(src, ec) || ec) {
+    std::cout << "Source not found\n";
+    return;
+  }
+
+  fs::path dst_final = dst_arg;
+  if (fs::exists(dst_arg, ec) && !ec && fs::is_directory(dst_arg, ec) && !ec) {
+    dst_final = dst_arg / src.filename();
+  }
+
+  fs::path parent = dst_final.parent_path();
+  if (parent.empty()) {
+    parent = fs::path(".");
+  }
+  if (!fs::exists(parent, ec) || ec || !fs::is_directory(parent, ec) || ec) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+  if (fs::exists(dst_final, ec) && !ec) {
+    std::cout << "Invalid target path\n";
+    return;
+  }
+
+  fs::rename(src, dst_final, ec);
+  if (!ec) {
+    return;
+  }
+
+  if (fs::is_regular_file(src, ec) && !ec) {
+    std::error_code copy_ec;
+    if (!fs::copy_file(src, dst_final, fs::copy_options::none, copy_ec) || copy_ec) {
+      std::cout << "Invalid target path\n";
+      return;
+    }
+    std::error_code remove_ec;
+    if (!fs::remove(src, remove_ec) || remove_ec) {
+      std::cout << "Invalid target path\n";
+      return;
+    }
+    return;
+  }
+
+  std::cout << "Invalid target path\n";
+}
+
 static void HandleCdCommand(const std::vector<std::string>& tokens) {
   if (tokens.size() < 2) {
     std::cout << "Missing path: Please enter 'cd [path]'\n";
@@ -590,6 +646,10 @@ int main(int argc, char** argv) {
     }
     if (cmd == "cp") {
       HandleCpCommand(tokens);
+      continue;
+    }
+    if (cmd == "mv") {
+      HandleMvCommand(tokens);
       continue;
     }
 

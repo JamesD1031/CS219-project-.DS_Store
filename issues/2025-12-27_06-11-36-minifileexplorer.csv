@@ -52,7 +52,7 @@
 - `mv note.txt new_note.txt` 实现重命名
 - `mv data ../archive/` 可把目录移动到目标目录下","- `tmp=$(mktemp -d) && mkdir -p $tmp/src/data && echo hi > $tmp/src/note.txt && printf ""mv src/note.txt src/new_note.txt\nmv src/data .\nexit\n"" | ./build/MiniFileExplorer $tmp`
 - 检查 $tmp/src/new_note.txt 存在且 note.txt 不存在；$tmp/data 存在","- 优先使用 rename；失败时可退化 copy+remove
-- 不做隐式覆盖（若目标已存在可提示 Invalid target path）",- 不影响 cp/ls/search 逻辑,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:83,
+- 不做隐式覆盖（若目标已存在可提示 Invalid target path）",- 不影响 cp/ls/search 逻辑,已完成,已完成,已完成,已提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:83,
 011,P1,B-进阶,fs,du directory total size (KB/MB),实现 `du [dir]`：统计目录递归总大小；单位 KB/MB 自动适配并输出 `Total size of <dir>: <n> KB/MB`。,"- 对存在目录输出 `Total size of <dir>: <n> KB` 或 `... <n> MB`
 - 至少满足示例口径：1024B→1KB；2048000B→2MB（向上取整可接受）","- `tmp=$(mktemp -d) && mkdir -p $tmp/d && dd if=/dev/zero of=$tmp/d/a bs=1024 count=1 2>/dev/null && printf ""du d\nexit\n"" | ./build/MiniFileExplorer $tmp`","- 递归遍历跳过无权限项
 - 不跟随 symlink",- 不影响 search 的遍历结果,未开始,未开始,未开始,未提交,codex,plan/2025-12-27_06-09-53-minifileexplorer.md:92,
