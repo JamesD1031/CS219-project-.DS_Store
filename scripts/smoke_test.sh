@@ -75,4 +75,3 @@ echo "$OUT_MAIN" | grep -F "Directory not found: no_such" >/dev/null
 echo "$OUT_MAIN" | grep -F "MiniFileExplorer closed successfully" >/dev/null
 
 echo "[smoke] OK"
-
