@@ -74,6 +74,18 @@ make
   - 目标非法：`Invalid target path`
 - `du [dir]`：计算目录总大小（自动换算 KB/MB）
   - 输出：`Total size of [dir]: N KB/MB`
+ 
+
+### Smoke 测试（Shell 脚本）
+
+这是一个用于快速验证 `MiniFileExplorer` 基本功能的简单 Smoke 测试脚本，无需手敲命令。
+
+运行方法：
+
+```bash
+./scripts/smoke_test.sh
+
+
 
 ## Example
 
