@@ -18,4 +18,3 @@ build/%.o: src/%.cpp
 
 clean:
 	@if [ -d build ]; then rm -r build; fi
-
